@@ -22,7 +22,8 @@
                                           :breaker-sleep-window-ms            500
                                           :breaker-error-threshold-percentage 20
                                           :execution-timeout-ms               100
-                                          :fallback-fn                        fallback}
+                                          :fallback-fn                        fallback
+                                          :request-volume-threshold           20}
                      "success")]
       (is (= "success" result))))
 
@@ -33,7 +34,8 @@
                                         :thread-count                       2
                                         :breaker-sleep-window-ms            500
                                         :breaker-error-threshold-percentage 20
-                                        :execution-timeout-ms               100}
+                                        :execution-timeout-ms               100
+                                        :request-volume-threshold           20}
                    "success")]
       (is (= "success" result))))
 
@@ -114,6 +116,23 @@
                                                 :breaker-sleep-window-ms            500
                                                 :breaker-error-threshold-percentage 20
                                                 :execution-timeout-ms               100
+                                                :fallback-fn                        fallback
+                                                :request-volume-threshold           20}
+                     {:status   "success"
+                      :response "success"})]
+      (is (= @result {:status   "success"
+                      :response "success"}))))
+  
+  (testing "Successful call without request volume threshold config"
+    (let [fallback (fn [_]
+                     "failure")
+          result   (bulwark/with-hystrix-async {:group-key                          "foo"
+                                                :command-key                        "foo"
+                                                :thread-pool-key                    "foo"
+                                                :thread-count                       2
+                                                :breaker-sleep-window-ms            500
+                                                :breaker-error-threshold-percentage 20
+                                                :execution-timeout-ms               100
                                                 :fallback-fn                        fallback}
                      {:status   "success"
                       :response "success"})]
@@ -127,7 +146,8 @@
                                               :thread-count                       2
                                               :breaker-sleep-window-ms            500
                                               :breaker-error-threshold-percentage 20
-                                              :execution-timeout-ms               100}
+                                              :execution-timeout-ms               100
+                                              :request-volume-threshold           20}
                    {:status "success" :response "success"})]
       (is (= @result {:status   "success"
                       :response "success"}))))

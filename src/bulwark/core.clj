@@ -14,17 +14,21 @@
         (finally
           (MDC/clear))))))
 
+(def hystrix-default-request-volume-threshold-value 20)
+
 (defn- init-fn [{:keys [thread-count
                         breaker-sleep-window-ms
                         breaker-error-threshold-percentage
-                        execution-timeout-ms]}]
+                        execution-timeout-ms
+                        request-volume-threshold]}]
   (fn [_ ^HystrixCommand$Setter setter]
     (-> setter
         (.andCommandPropertiesDefaults
          (-> (HystrixCommandProperties/Setter)
              (.withCircuitBreakerSleepWindowInMilliseconds breaker-sleep-window-ms)
              (.withCircuitBreakerErrorThresholdPercentage breaker-error-threshold-percentage)
-             (.withExecutionTimeoutInMilliseconds execution-timeout-ms)))
+             (.withExecutionTimeoutInMilliseconds execution-timeout-ms)
+             (.withCircuitBreakerRequestVolumeThreshold (or request-volume-threshold hystrix-default-request-volume-threshold-value))))
         (.andThreadPoolPropertiesDefaults
          (.withCoreSize (HystrixThreadPoolProperties/Setter) thread-count)))))
 
@@ -47,7 +51,8 @@
            :init-fn         (init-fn (select-keys config [:thread-count
                                                           :breaker-sleep-window-ms
                                                           :breaker-error-threshold-percentage
-                                                          :execution-timeout-ms]))
+                                                          :execution-timeout-ms
+                                                          :request-volume-threshold]))
            :run-fn          (capture-logging-context run-fn)}
     (some? fallback-fn) (assoc :fallback-fn (fallback-wrapper fallback-fn))))
 
